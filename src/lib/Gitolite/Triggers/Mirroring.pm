@@ -43,6 +43,20 @@ sub input {
 
         # we're done.  Yes, really...
         exit 0;
+    } elsif ( $ENV{SSH_ORIGINAL_COMMAND} =~ /^D (unlock|rm) '(\S+)'$/ ) {
+        my ($action, $repo) = ($1, $2);
+
+        details($repo);
+        _die "$hn: '$repo' is local"                        if $mode eq 'local';
+        _die "$hn: '$repo' is native"                       if $mode eq 'master';
+        _die "$hn: '$sender' is not the master for '$repo'" if $master ne $sender;
+
+        my $bypass_owner_check = option($repo, "bypass-owner-check");
+        # this expects valid perms content on STDIN
+        _system("GL_BYPASS_OWNER_CHECK=$bypass_owner_check gitolite D $action $repo");
+
+        # we're done.  Yes, really...
+        exit 0;
     }
 
     if ( $ENV{SSH_ORIGINAL_COMMAND} =~ /^USER=(\S+) SOC=(git-receive-pack '(\S+)')$/ ) {

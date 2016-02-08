@@ -50,7 +50,7 @@ usage() { perl -lne 'print substr($_, 2) if /^# Usage/../^$/' < $0; exit 1; }
 [ -z "$1" ] && usage
 [ "$1" = "-h" ] && usage
 [ "$1" != "list-trash" ] && [ -z "$2" ] && usage
-[ -z "$GL_USER" ] && die GL_USER not set
+[ -z "$GL_USER" ] && [ ! "$GL_BYPASS_OWNER_CHECK" ] && die GL_USER not set
 
 # ----------------------------------------------------------------------
 cmd=$1
@@ -62,7 +62,9 @@ TRASH_SUFFIX=`gitolite query-rc TRASH_SUFFIX`;  tsuf=`date +%Y-%m-%d_%H:%M:%S`; 
 # ----------------------------------------------------------------------
 
 owner_or_die() {
-    gitolite owns "$repo" || die You are not authorised
+    if [ ! "$GL_BYPASS_OWNER_CHECK" ]; then
+        gitolite owns "$repo" || die You are not authorised
+    fi
 }
 
 # ----------------------------------------------------------------------
